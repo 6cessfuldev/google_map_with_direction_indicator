@@ -5,8 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CalculateService {
-  late double widgetWidth;
-  late double widgetHeight;
+  late double _widgetWidth;
+  late double _widgetHeight;
+  late double _topRightDiagonalAngle;
+
+  CalculateService(double widgetWidth, double widgetHeight) {
+    _widgetWidth = widgetWidth;
+    _widgetHeight = widgetHeight;
+    _topRightDiagonalAngle = calculateDiagonalAngle(widgetWidth, widgetHeight);
+  }
+
+  double calculateDiagonalAngle(double width, double height) {
+    return math.atan2(height, width) * 180 / math.pi;
+  }
 
   Future<List<OffsetWithAngle>> calculateOffsets(
       Completer<GoogleMapController> mapController,
@@ -17,62 +28,55 @@ class CalculateService {
 
     double latRange = bounds.northeast.latitude - bounds.southwest.latitude;
     double lngRange = bounds.northeast.longitude - bounds.southwest.longitude;
-
-    double latLngRatio = latRange / lngRange;
+    double latPerPixel = _widgetHeight / latRange;
+    double lngPerPixel = _widgetWidth / lngRange;
 
     final LatLng mapCenterLatLng = LatLng(
         bounds.southwest.latitude + latRange / 2.0,
         bounds.southwest.longitude + lngRange / 2.0);
 
-    List<LatLng> list = listLatLng
+    List<LatLng> resList = listLatLng
         .where((latLng) => !(latLng.latitude >= bounds.southwest.latitude &&
             latLng.latitude <= bounds.northeast.latitude &&
             latLng.longitude >= bounds.southwest.longitude &&
             latLng.longitude <= bounds.northeast.longitude))
         .toList();
 
-    if (list.isNotEmpty) {
-      return list
-          .map((e) => calculateIndicatorPosition(
-              directionIndicatorSize, e, mapCenterLatLng, latLngRatio))
-          .toList();
-    } else {
-      return [];
-    }
+    return resList
+        .map((e) => calculateIndicatorPosition(directionIndicatorSize, e,
+            mapCenterLatLng, latPerPixel, lngPerPixel))
+        .toList();
   }
 
-  double calculateAngle(
-      LatLng markerLatLng, LatLng centerLatLng, double latLngRatio) {
-    double deltaX = markerLatLng.longitude - centerLatLng.longitude;
-    double deltaY = markerLatLng.latitude - centerLatLng.latitude;
+  OffsetWithAngle calculateIndicatorPosition(
+      Size directionIndicatorSize,
+      LatLng markerLatLng,
+      LatLng centerLatLng,
+      double latPerPixel,
+      double lngPerPixel) {
+    double angle =
+        calculateAngle(markerLatLng, centerLatLng, latPerPixel, lngPerPixel);
 
-    return math.atan2(deltaY, deltaX * latLngRatio) * (180 / math.pi);
-  }
-
-  OffsetWithAngle calculateIndicatorPosition(Size directionIndicatorSize,
-      LatLng markerLatLng, LatLng centerLatLng, double latLngRatio) {
-    double angle = calculateAngle(markerLatLng, centerLatLng, latLngRatio);
-
-    double centerX = widgetWidth / 2;
-    double centerY = widgetHeight / 2;
+    double centerX = _widgetWidth / 2;
+    double centerY = _widgetHeight / 2;
     double x, y;
 
-    // 각도에 따라 수평 또는 수직 방향 결정
-    if (angle >= -45 && angle <= 45) {
-      // 수직 방향 (상하단 경계)
-      x = widgetWidth - directionIndicatorSize.width; // 우측 또는 좌측 경계
+    if (angle >= -_topRightDiagonalAngle && angle <= _topRightDiagonalAngle) {
+      x = _widgetWidth - directionIndicatorSize.width;
       y = centerY -
           centerX * math.tan(angle * math.pi / 180) +
           directionIndicatorSize.width / 2 * math.tan(angle * math.pi / 180) -
           directionIndicatorSize.height / 2;
-    } else if (angle >= 135 || angle <= -135) {
-      x = 0; // 우측 또는 좌측 경계
+    } else if (angle >= 180 - _topRightDiagonalAngle ||
+        angle <= -180 + _topRightDiagonalAngle) {
+      x = 0;
       y = centerY +
           centerX * math.tan(angle * math.pi / 180.0) -
           directionIndicatorSize.width / 2 * math.tan(angle * math.pi / 180) -
           directionIndicatorSize.height / 2;
-    } else if (angle < 135 && angle > 45) {
-      y = 0; // 상단 또는 하단 경계
+    } else if (angle < 180 - _topRightDiagonalAngle &&
+        angle > _topRightDiagonalAngle) {
+      y = 0;
       x = centerX -
           centerY * math.tan((angle - 90) * math.pi / 180.0) +
           directionIndicatorSize.width /
@@ -80,8 +84,7 @@ class CalculateService {
               math.tan((angle - 90) * math.pi / 180) -
           directionIndicatorSize.height / 2;
     } else {
-      // 수평 방향 (좌우측 경계)
-      y = widgetHeight - directionIndicatorSize.height;
+      y = _widgetHeight - directionIndicatorSize.height;
       x = centerX +
           centerY * math.tan((angle + 90) * math.pi / 180.0) -
           directionIndicatorSize.width /
@@ -90,6 +93,20 @@ class CalculateService {
           directionIndicatorSize.height / 2;
     }
     return OffsetWithAngle(Offset(x, y), angle);
+  }
+
+  /// calculate the angle between marker position and map's center position.
+  /// Calculate the angle between two latitude and longitude points,
+  /// and then apply the latitude and longitude ratio of Google Maps
+  /// to determine the actual rendered angle.
+  double calculateAngle(LatLng markerLatLng, LatLng centerLatLng,
+      double latPerPixel, double lngPerPixel) {
+    double deltaX =
+        (markerLatLng.longitude - centerLatLng.longitude) * lngPerPixel;
+    double deltaY =
+        (markerLatLng.latitude - centerLatLng.latitude) * latPerPixel;
+
+    return math.atan2(deltaY, deltaX) * (180 / math.pi);
   }
 }
 
