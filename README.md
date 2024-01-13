@@ -5,6 +5,8 @@
 A Flutter package that extends the Google Maps widget to provide directional indicators for markers located outside the current map view.
 
 ## Screenshots
+![1](https://github.com/6cessfuldev/google_map_with_direction_indicator/assets/89137580/46a4df21-7e5d-49ac-8543-b24782d19637)
+![2](https://github.com/6cessfuldev/google_map_with_direction_indicator/assets/89137580/4215801f-2e24-417e-b7bc-10a8505d7cf5)
 
 ## Features
 
@@ -16,7 +18,7 @@ Use this package in your Flutter app to:
 
 1. To use this plugin, add google_maps_flutter as a dependency in your pubspec.yaml file.
 2. Do the basic setup for having Google Maps
-3. Create a Set of normal markers ( Set < Marker > ) and set it as markers parameter of Google Maps widget
+3. Create a Set of normal markers ( Set < Marker > ) and set it as markers parameter of GoogleMapWithDirectionIndicator widget
 4. Import google_maps_flutter package and this package;
 5. Enter parameters into the GoogleMapWithDirectionIndicator widget as you would with the GoogleMap widget
 6. Enter parameters for the direction indicator as well
