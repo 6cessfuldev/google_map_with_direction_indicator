@@ -47,8 +47,9 @@ class GoogleMapWithDirectionIndicator extends StatefulWidget {
     this.height,
     this.width,
     required this.controller,
-    required MaterialColor indicatorColor,
-    this.directionIndicatorSize = const Size(20, 20),
+    MaterialColor indicatorColor = Colors.blue,
+    this.indicatorSize = const Size(30, 30),
+    this.isIndicatorVisible = true,
   });
 
   final MapCreatedCallback? onMapCreated;
@@ -89,7 +90,8 @@ class GoogleMapWithDirectionIndicator extends StatefulWidget {
   final Completer<GoogleMapController> controller;
   final double? width;
   final double? height;
-  final Size directionIndicatorSize;
+  final Size indicatorSize;
+  final bool isIndicatorVisible;
 
   @override
   State<GoogleMapWithDirectionIndicator> createState() =>
@@ -108,7 +110,7 @@ class _GoogleMapWithDirectionIndicatorState
             .map<LatLng>((marker) =>
                 LatLng(marker.position.latitude, marker.position.longitude))
             .toList(),
-        widget.directionIndicatorSize);
+        widget.indicatorSize);
     if (mounted) {
       setState(() {
         _indicatorOffsetList = offsets;
@@ -171,7 +173,7 @@ class _GoogleMapWithDirectionIndicatorState
                     renderIndicator();
                   },
                 ),
-                if (widget.markers.isNotEmpty)
+                if (widget.isIndicatorVisible && widget.markers.isNotEmpty)
                   ..._indicatorOffsetList.map<Widget>((el) {
                     return Positioned(
                       left: el.offset.dx,
@@ -183,8 +185,8 @@ class _GoogleMapWithDirectionIndicatorState
                           child: Image.asset(
                             'assets/images/arrow.png',
                             color: Colors.blue,
-                            height: widget.directionIndicatorSize.height,
-                            width: widget.directionIndicatorSize.width,
+                            height: widget.indicatorSize.height,
+                            width: widget.indicatorSize.width,
                           ),
                         ),
                       ),

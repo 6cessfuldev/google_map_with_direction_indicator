@@ -45,7 +45,7 @@ class _HomePageState extends State<HomePage> {
       width: 200,
       height: 200,
       indicatorColor: Colors.red,
-      directionIndicatorSize: const Size(25, 25),
+      indicatorSize: const Size(25, 25),
       controller: _controller,
       initialCameraPosition: _kGooglePlex,
       onMapCreated: (GoogleMapController controller) {
