@@ -1,0 +1,17 @@
+name: google_map_with_direction_indicator
+description: "A Flutter package that extends the Google Maps widget to provide directional indicators for markers located outside the current map view."
+version: 0.0.1
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_maps_flutter: ^2.5.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
