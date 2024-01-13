@@ -98,8 +98,23 @@ class GoogleMapWithDirectionIndicator extends StatefulWidget {
 
 class _GoogleMapWithDirectionIndicatorState
     extends State<GoogleMapWithDirectionIndicator> {
-  final List<OffsetWithAngle> _indicatorOffsetList = [];
-  final CalculateService _service = CalculateService();
+  List<OffsetWithAngle> _indicatorOffsetList = [];
+  late CalculateService _service;
+
+  renderIndicator() async {
+    List<OffsetWithAngle> offsets = await _service.calculateOffsets(
+        widget.controller,
+        widget.markers
+            .map<LatLng>((marker) =>
+                LatLng(marker.position.latitude, marker.position.longitude))
+            .toList(),
+        widget.directionIndicatorSize);
+    if (mounted) {
+      setState(() {
+        _indicatorOffsetList = offsets;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,9 +124,8 @@ class _GoogleMapWithDirectionIndicatorState
           height: widget.height,
           width: widget.width,
           child: LayoutBuilder(builder: (context, constraints) {
-            _service.widgetHeight = constraints.constrainHeight();
-            _service.widgetWidth = constraints.constrainWidth();
-
+            _service = CalculateService(
+                constraints.constrainWidth(), constraints.constrainHeight());
             return Stack(
               children: [
                 GoogleMap(
@@ -148,27 +162,13 @@ class _GoogleMapWithDirectionIndicatorState
                   onLongPress: widget.onLongPress,
                   onMapCreated: (controller) {
                     widget.onMapCreated!(controller);
-                    _service.calculateOffsets(
-                        widget.controller,
-                        widget.markers
-                            .map<LatLng>((marker) => LatLng(
-                                marker.position.latitude,
-                                marker.position.longitude))
-                            .toList(),
-                        widget.directionIndicatorSize);
+                    renderIndicator();
                   },
                   onCameraMove: (position) {
                     if (widget.onCameraMove != null) {
                       widget.onCameraMove!(position);
                     }
-                    _service.calculateOffsets(
-                        widget.controller,
-                        widget.markers
-                            .map<LatLng>((marker) => LatLng(
-                                marker.position.latitude,
-                                marker.position.longitude))
-                            .toList(),
-                        widget.directionIndicatorSize);
+                    renderIndicator();
                   },
                 ),
                 if (widget.markers.isNotEmpty)
